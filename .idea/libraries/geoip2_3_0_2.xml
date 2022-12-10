@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="geoip2-3.0.2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/src/com/bmrider/geoip2-3.0.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/com/bmrider/jackson-annotations-2.13.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/com/bmrider/maxmind-db-2.1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/com/bmrider/jackson-core-2.13.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/com/bmrider/jackson-databind-2.13.4.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/src/com/bmrider/geoip2-3.0.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
