@@ -21,7 +21,9 @@ public class BMRiderSignUpDialog extends JDialog {
     private JRoundedTextField txtSignUpPhoneNumber;
     private JRoundedPasswordField txtSignUpPasswordConfirm;
 
-    private final String[] indexes = {"아이디를", "비밀번호를", "비밀번호 확인을", "이름을", "주소를", "휴대폰 번호를"};
+    private final String[] indexes = {
+            "아이디를", "비밀번호를", "비밀번호 확인을", "이름을", "주소를", "휴대폰 번호를"
+    };
 
     public BMRiderSignUpDialog() {
         initializeComponents();
@@ -64,7 +66,6 @@ public class BMRiderSignUpDialog extends JDialog {
     }
 
     private void onOK() {
-        Boolean isValidTransaction = false;
         String riderAddress = txtSignUpAddress.getText();
         String riderId = txtSignUpId.getText();
         String riderName = txtSignUpName.getText();
@@ -74,6 +75,7 @@ public class BMRiderSignUpDialog extends JDialog {
         String[] infos = {
                 riderId, riderPwd, riderPwdConfirm, riderName, riderAddress, riderPhone
         };
+        boolean isValidTransaction = false;
 
         for (int i = 0; i < infos.length; ++i) {
             if (infos[i].isEmpty()) {
