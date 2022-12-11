@@ -79,12 +79,22 @@ public class BMRiderSignUpDialog extends JDialog {
 
         for (int i = 0; i < infos.length; ++i) {
             if (infos[i].isEmpty()) {
-                JOptionPane.showMessageDialog(this, String.format("%s 입력해주세요.", indexes[i]));
+                JOptionPane.showMessageDialog(
+                        this,
+                        String.format("%s 입력해주세요.", indexes[i]),
+                        "SYSTEM",
+                        JOptionPane.WARNING_MESSAGE
+                );
                 return;
             }
         }
         if (!riderPwd.equals(riderPwdConfirm)) {
-            JOptionPane.showMessageDialog(this, "비밀번호가 일치하지 않습니다.");
+            JOptionPane.showMessageDialog(
+                    this,
+                    "입력한 비밀번호와 비밀번호 확인란이 다릅니다.",
+                    "SYSTEM",
+                    JOptionPane.ERROR_MESSAGE
+            );
             return;
         }
 

@@ -121,7 +121,7 @@ public class BMRiderLoginForm extends JFrame {
                 String pwdSha1 = HashAlgorithm.makeHash(riderPwd, "sha1");
 
                 if (pwdMd5.equals(md5) && pwdSha1.equals(sha1)) {
-                    new BMRiderMainForm(riderId);
+                    new BMRiderMainForm(this, riderId);
                     this.setVisible(false);
                 } else {
                     JOptionPane.showMessageDialog(
