@@ -207,9 +207,6 @@ public class BMRiderMainForm extends JFrame {
     }
 
     private void onRefresh() {
-        final String[] headerNew = {
-                "배달 번호", "배송 주소", "배달 상태", "결제 방법", "가게 이름", "메뉴 정보"
-        };
         DefaultTableModel defaultTableModel = (DefaultTableModel)tblProcess.getModel();
         defaultTableModel.setRowCount(0);
 
@@ -218,6 +215,7 @@ public class BMRiderMainForm extends JFrame {
         for (Object[] data : tableList) {
             defaultTableModel.addRow(data);
         }
+        defaultTableModel.fireTableDataChanged();
     }
 
     private void setTabProcess() {
@@ -317,7 +315,7 @@ public class BMRiderMainForm extends JFrame {
     
     private Object[][] getProcessIncompleteList() {
         ArrayList<ArrayList<Object>> tuples = new ArrayList<>();
-        Object[][] base = tableList != null ? tableList : getProcessAllList();
+        Object[][] base = getProcessAllList();
         Object[][] result;
 
         for (Object[] datum : base) {
