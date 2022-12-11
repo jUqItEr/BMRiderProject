@@ -51,15 +51,16 @@ public class BMRiderMainForm extends JFrame {
     private JButton btnChange;
     private JTable tblProcess;
     private JPanel tabProcess;
-    private JScrollPane scrollPaneProcess;
     private JButton btnRefresh;
     private JButton btnAccept;
     private JButton btnDelivered;
+    private JTable tblProcessCompleted;
 
     private JFrame _parent;
     private String _riderId;
 
-    private Object[][] tableList;
+    private Object[][] tableListIncomplete;
+    private Object[][] tableListComplete;
 
     private final String[] indexes = {
             "비밀번호를", "비밀번호 확인을", "이름을", "주소를", "휴대폰 번호를"
@@ -209,27 +210,36 @@ public class BMRiderMainForm extends JFrame {
     }
 
     private void onRefresh() {
-        DefaultTableModel defaultTableModel = (DefaultTableModel)tblProcess.getModel();
-        defaultTableModel.setRowCount(0);
+        DefaultTableModel waitingModel = (DefaultTableModel)tblProcess.getModel();
+        DefaultTableModel completedModel = (DefaultTableModel)tblProcessCompleted.getModel();
+        waitingModel.setRowCount(0);
+        completedModel.setRowCount(0);
 
-        tableList = getProcessIncompleteList();
+        tableListIncomplete = getProcessIncompleteList();
 
-        for (Object[] data : tableList) {
-            defaultTableModel.addRow(data);
+        for (Object[] data : tableListIncomplete) {
+            waitingModel.addRow(data);
         }
-        defaultTableModel.fireTableDataChanged();
+        waitingModel.fireTableDataChanged();
+
+        tableListComplete = getProcessCompleteList();
+
+        for (Object[] data : tableListComplete) {
+            completedModel.addRow(data);
+        }
+        completedModel.fireTableDataChanged();
     }
 
     private void setTabProcess() {
-        final String[] headerNew = {
+        final String[] header = {
                 "배달 번호", "배송 주소", "배달 상태", "결제 방법", "가게 이름", "메뉴 정보"
         };
 
         tabProcess.setLayout(null);
-        tableList = getProcessIncompleteList();
+        tableListIncomplete = getProcessIncompleteList();
 
-        DefaultTableModel defaultTableModel = new DefaultTableModel(tableList, headerNew);
-        tblProcess.setModel(defaultTableModel);
+        DefaultTableModel waitingModel = new DefaultTableModel(tableListIncomplete, header);
+        tblProcess.setModel(waitingModel);
         tblProcess.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -237,7 +247,23 @@ public class BMRiderMainForm extends JFrame {
                 int col = tblProcess.columnAtPoint(e.getPoint());
 
                 if (col == 5) {
-                    int number = Integer.parseInt(tableList[row][0].toString());
+                    int number = Integer.parseInt(tableListIncomplete[row][0].toString());
+                    new DialogMenuInfo(number).setVisible(true);
+                }
+            }
+        });
+        tableListComplete = getProcessCompleteList();
+
+        DefaultTableModel completedModel = new DefaultTableModel(tableListComplete, header);
+        tblProcessCompleted.setModel(completedModel);
+        tblProcessCompleted.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int row = tblProcess.rowAtPoint(e.getPoint());
+                int col = tblProcess.columnAtPoint(e.getPoint());
+
+                if (col == 5) {
+                    int number = Integer.parseInt(tableListComplete[row][0].toString());
                     new DialogMenuInfo(number).setVisible(true);
                 }
             }
@@ -314,7 +340,34 @@ public class BMRiderMainForm extends JFrame {
         }
         return new Object[0][0];
     }
-    
+
+    private Object[][] getProcessCompleteList() {
+        ArrayList<ArrayList<Object>> tuples = new ArrayList<>();
+        Object[][] base = getProcessAllList();
+        Object[][] result;
+
+        for (Object[] datum : base) {
+            ArrayList<Object> tuple = new ArrayList<>();
+            String state = datum[2].toString();
+            boolean isAppended = false;
+
+            if (state.equals("완료") && datum[6] != null &&
+                    Objects.requireNonNull(datum[6].toString()).equals(this._riderId)) {
+                tuple.addAll(Arrays.asList(datum));
+                isAppended = true;
+            }
+            if (isAppended) {
+                tuples.add(tuple);
+            }
+        }
+        result = new Object[tuples.size()][7];
+
+        for (int i = 0; i < tuples.size(); ++i) {
+            result[i] = tuples.get(i).toArray(new Object[4]);
+        }
+        return result;
+    }
+
     private Object[][] getProcessIncompleteList() {
         ArrayList<ArrayList<Object>> tuples = new ArrayList<>();
         Object[][] base = getProcessAllList();
@@ -325,8 +378,8 @@ public class BMRiderMainForm extends JFrame {
             String state = datum[2].toString();
             boolean isAppended = false;
 
-            if (state.equals("대기 중") ||
-                    (state.equals("배달 중") && Objects.requireNonNull(datum[6].toString()).equals(this._riderId))) {
+            if (state.equals("대기 중") || (state.equals("배달 중") && datum[6] != null &&
+                            Objects.requireNonNull(datum[6].toString()).equals(this._riderId))) {
                 tuple.addAll(Arrays.asList(datum));
                 isAppended = true;
             }
@@ -381,8 +434,14 @@ public class BMRiderMainForm extends JFrame {
             cstmt.setString(2, this._riderId);
             cstmt.setInt(3, 1);
 
-            cstmt.executeQuery();
-
+            if (cstmt.execute()) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "주문이 수락되었습니다.",
+                        "Oracle Manager",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+            }
             conn.commit();
 
             cstmt.close();
@@ -494,8 +553,14 @@ public class BMRiderMainForm extends JFrame {
             cstmt.setString(2, this._riderId);
             cstmt.setInt(3, 2);
 
-            cstmt.executeQuery();
-
+            if (cstmt.execute()) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "주문 처리가 완료되었습니다.",
+                        "Oracle Manager",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+            }
             conn.commit();
 
             cstmt.close();
