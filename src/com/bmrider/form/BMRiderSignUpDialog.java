@@ -8,9 +8,7 @@ import com.bmrider.security.HashAlgorithm;
 import javax.swing.*;
 import java.awt.event.*;
 import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class BMRiderSignUpDialog extends JDialog {
     private JPanel pnlContent;
@@ -66,6 +64,7 @@ public class BMRiderSignUpDialog extends JDialog {
     }
 
     private void onOK() {
+        Boolean isValidTransaction = false;
         String riderAddress = txtSignUpAddress.getText();
         String riderId = txtSignUpId.getText();
         String riderName = txtSignUpName.getText();
@@ -88,32 +87,54 @@ public class BMRiderSignUpDialog extends JDialog {
         }
 
         try {
-            String query = "INSERT INTO RIDER(RIDER_ID, RIDER_PASSWORD1, RIDER_PASSWORD2, RIDER_ADDRESS," +
+            String selectQuery = "SELECT RIDER_PASSWORD1, RIDER_PASSWORD2 FROM RIDER WHERE RIDER_ID='" + riderId + "'";
+            String insertQuery = "INSERT INTO RIDER(RIDER_ID, RIDER_PASSWORD1, RIDER_PASSWORD2, RIDER_ADDRESS," +
                     "RIDER_NAME, RIDER_PHONE, RIDER_COUNT) VALUES(?, ?, ?, ?, ?, ?, ?)";
             String pwdMd5 = HashAlgorithm.makeHash(riderPwd, "md5");
             String pwdSha1 = HashAlgorithm.makeHash(riderPwd, "sha1");
             Connection conn = DBConnection.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(query);
+            Statement stmt = conn.createStatement();
+            PreparedStatement pstmt = conn.prepareStatement(insertQuery);
+            ResultSet rs;
 
-            pstmt.setString(1, riderId);
-            pstmt.setString(2, pwdMd5);
-            pstmt.setString(3, pwdSha1);
-            pstmt.setString(4, riderAddress);
-            pstmt.setString(5, riderName);
-            pstmt.setString(6, riderPhone);
-            pstmt.setInt(7, 0);
+            rs = stmt.executeQuery(selectQuery);
 
-            if (pstmt.executeUpdate() > 0) {
-                JOptionPane.showMessageDialog(this, "회원가입이 완료되었습니다.");
+            if (rs.next()) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "이미 있는 아이디입니다.",
+                        "Oracle Manager",
+                        JOptionPane.ERROR_MESSAGE
+                );
             } else {
-                JOptionPane.showMessageDialog(this, "회원가입에 문제가 생겼습니다.");
+                pstmt.setString(1, riderId);
+                pstmt.setString(2, pwdMd5);
+                pstmt.setString(3, pwdSha1);
+                pstmt.setString(4, riderAddress);
+                pstmt.setString(5, riderName);
+                pstmt.setString(6, riderPhone);
+                pstmt.setInt(7, 0);
+
+                if (pstmt.executeUpdate() > 0) {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "회원가입이 완료되었습니다.",
+                            "Oracle Manager",
+                            JOptionPane.INFORMATION_MESSAGE
+                    );
+                    isValidTransaction = true;
+                }
             }
+            rs.close();
+            stmt.close();
             pstmt.close();
             conn.close();
         } catch (SQLException | NoSuchAlgorithmException ex) {
             ex.printStackTrace();
         }
-        dispose();
+        if (isValidTransaction) {
+            dispose();
+        }
     }
 
     private void onCancel() {

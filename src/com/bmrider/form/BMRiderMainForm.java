@@ -27,7 +27,8 @@ public class BMRiderMainForm extends JFrame {
     private JTabbedPane tabMain;
     private JXMapViewer jXMapViewer;
     private JTabbedPane tabSubProcess;
-    private JTable table1;
+    private JTable tblProcessNew;
+    private JTable tblProcessCompleted;
 
     public BMRiderMainForm() {
         initializeComponents();

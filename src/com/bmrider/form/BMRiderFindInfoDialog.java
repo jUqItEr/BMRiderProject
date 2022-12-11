@@ -10,10 +10,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class BMRiderFindInfoDialog extends JDialog {
     private JPanel pnlContent;
@@ -151,28 +148,56 @@ public class BMRiderFindInfoDialog extends JDialog {
             );
             return;
         }
+        if (!riderPwd.equals(riderPwdConfirm)) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "입력하신 비밀번호와 확인 비밀번호가 다릅니다.",
+                    "Oracle Manager",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
 
         try {
-            String query = "UPDATE RIDER SET RIDER_PASSWORD1=?, RIDER_PASSWORD2=? WHERE RIDER_ID=?";
+            String selectQuery = "SELECT RIDER_PASSWORD1, RIDER_PASSWORD2 FROM RIDER WHERE RIDER_ID='" + riderId + "'";
+            String updateQuery = "UPDATE RIDER SET RIDER_PASSWORD1=?, RIDER_PASSWORD2=? WHERE RIDER_ID=?";
             String pwdMd5 = HashAlgorithm.makeHash(riderPwd, "md5");
             String pwdSha1 = HashAlgorithm.makeHash(riderPwd, "sha1");
             Connection conn = DBConnection.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(query);
+            Statement stmt = conn.createStatement();
+            PreparedStatement pstmt = conn.prepareStatement(updateQuery);
+            ResultSet rs;
 
-            pstmt.setString(1, pwdMd5);
-            pstmt.setString(2, pwdSha1);
-            pstmt.setString(3, riderId);
+            rs = stmt.executeQuery(selectQuery);
 
-            if (pstmt.executeUpdate() > 0) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "비밀번호가 변경되었습니다.",
-                        "Oracle Manager",
-                        JOptionPane.PLAIN_MESSAGE
-                );
-                txtId.setText("");
-                txtPassword.setText("");
-                txtPasswordConfirm.setText("");
+            if (rs.next()) {
+                String md5 = rs.getString(1);
+                String sha1 = rs.getString(2);
+
+                if (pwdMd5.equals(md5) && pwdSha1.equals(sha1)) {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "입력하신 비밀번호가 이전 비밀번호와 같습니다.",
+                            "Oracle Manager",
+                            JOptionPane.WARNING_MESSAGE
+                    );
+                } else {
+                    pstmt.setString(1, pwdMd5);
+                    pstmt.setString(2, pwdSha1);
+                    pstmt.setString(3, riderId);
+
+                    if (pstmt.executeUpdate() > 0) {
+                        JOptionPane.showMessageDialog(
+                                this,
+                                "비밀번호가 변경되었습니다.",
+                                "Oracle Manager",
+                                JOptionPane.INFORMATION_MESSAGE
+                        );
+                        txtId.setText("");
+                        txtPassword.setText("");
+                        txtPasswordConfirm.setText("");
+                    }
+                }
             } else {
                 JOptionPane.showMessageDialog(
                         this,
@@ -181,6 +206,8 @@ public class BMRiderFindInfoDialog extends JDialog {
                         JOptionPane.ERROR_MESSAGE
                 );
             }
+            rs.close();
+            stmt.close();
             pstmt.close();
             conn.close();
         } catch (SQLException | NoSuchAlgorithmException ex) {
