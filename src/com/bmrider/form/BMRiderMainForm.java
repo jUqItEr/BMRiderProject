@@ -355,8 +355,7 @@ public class BMRiderMainForm extends JFrame {
             return;
         }
         DefaultTableModel model = (DefaultTableModel)tblProcess.getModel();
-        Object[] vector = model.getDataVector()
-                .elementAt(tblProcess.convertColumnIndexToModel(selectedIndex)).toArray();
+        Object[] vector = model.getDataVector().elementAt(selectedIndex).toArray();
         int state = this._dict.get(vector[2].toString());
         int number = Integer.parseInt(vector[0].toString());
 
