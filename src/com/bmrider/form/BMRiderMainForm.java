@@ -54,6 +54,7 @@ public class BMRiderMainForm extends JFrame {
     private JScrollPane scrollPaneProcess;
     private JButton btnRefresh;
     private JButton btnAccept;
+    private JButton btnDelivered;
 
     private JFrame _parent;
     private String _riderId;
@@ -147,6 +148,7 @@ public class BMRiderMainForm extends JFrame {
     private void initializeComponents() {
         btnAccept.addActionListener(e -> btnAcceptClickListener());
         btnChange.addActionListener(e -> btnChangeClickListener());
+        btnDelivered.addActionListener(e -> btnDeliveredClickListener());
         btnRefresh.addActionListener(e -> btnRefreshClickListener());
         btnWithdrawal.addActionListener(e -> btnWithdrawalClickListener());
 
@@ -451,6 +453,57 @@ public class BMRiderMainForm extends JFrame {
          } catch (SQLException | NoSuchAlgorithmException ex) {
              ex.printStackTrace();
          }
+    }
+
+    private void btnDeliveredClickListener() {
+        int selectedIndex = tblProcess.getSelectedRow();
+
+        if (selectedIndex == -1) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "주문을 완료하려면 최소 한 행은 선택해야 합니다.",
+                    "SYSTEM",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+        DefaultTableModel model = (DefaultTableModel)tblProcess.getModel();
+        Object[] vector = model.getDataVector().elementAt(selectedIndex).toArray();
+        int state = this._dict.get(vector[2].toString());
+        int number = Integer.parseInt(vector[0].toString());
+
+        if (state == 0) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "배달을 완료하려면 배달을 먼저 수락해야 합니다.",
+                    "SYSTEM",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        try {
+            String query = "{call P_RIDER_DELIVERY_MANAGE(?,?,?) }";
+            Connection conn = DBConnection.getConnection();
+            CallableStatement cstmt = conn.prepareCall(query);
+
+            // Make transaction!!!
+            conn.setAutoCommit(false);
+
+            cstmt.setInt(1, number);
+            cstmt.setString(2, this._riderId);
+            cstmt.setInt(3, 2);
+
+            cstmt.executeQuery();
+
+            conn.commit();
+
+            cstmt.close();
+            conn.close();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        onRefresh();
     }
 
     private void btnRefreshClickListener() {
